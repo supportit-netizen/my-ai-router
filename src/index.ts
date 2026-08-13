@@ -53,8 +53,8 @@ app.post('/api/chat', async (c) => {
         break;
 
       default:
-        modelUsed = 'gemini/gemini-1.5-flash'
-        const model = geminiAI.getGenerativeModel({ model: 'gemini-1.5-flash' })
+        modelUsed = 'gemini/gemini-3.6-flash'
+        const model = geminiAI.getGenerativeModel({ model: 'gemini-3.6-flash' })
         const result = await model.generateContent(userPrompt)
         replyText = result.response.text()
         break;
