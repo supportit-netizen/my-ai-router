@@ -8,7 +8,10 @@ const app = new Hono()
 
 // เตรียม Client ของแต่ละค่าย
 const geminiAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || '' })
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || '',
+  baseURL: 'https://openrouter.ai/api/v1',
+})
 
 app.get('/', (c) => {
   return c.text('AI Router Server is Ready!')
@@ -38,7 +41,7 @@ app.post('/api/chat', async (c) => {
       case 'CODE':
         modelUsed = 'openai/gpt-4o-mini'
         const completion = await openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: 'openai/gpt-4o-mini',
           messages: [{ role: 'user', content: userPrompt }],
         })
         replyText = completion.choices[0].message.content || ''
