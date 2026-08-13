@@ -7,7 +7,11 @@ import OpenAI from 'openai'
 import { Pool } from 'pg'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import pdfParse from 'pdf-parse'
+// ⚠️ สำคัญ: import เข้า lib โดยตรง ห้ามใช้ 'pdf-parse' เฉย ๆ
+// เพราะ index.js ของ pdf-parse มี debug code ที่อ่านไฟล์ ./test/data/05-versions-space.pdf
+// เมื่อ bundle เป็นไฟล์เดียว (module.parent === null) มันจะเข้า debug mode แล้ว crash ENOENT
+// @ts-ignore - subpath นี้ไม่มี type declaration
+import pdfParse from 'pdf-parse/lib/pdf-parse.js'
 
 const app = new Hono()
 app.use('/*', cors())
@@ -206,8 +210,16 @@ app.post('/api/upload', requireAuth, async (c) => {
     let extractedText = ''
 
     if (file.name.toLowerCase().endsWith('.pdf')) {
-      const parsed = await pdfParse(buffer)
-      extractedText = parsed.text
+      // ตรวจ magic number กัน buffer ที่ไม่ใช่ PDF จริง
+      if (buffer.subarray(0, 4).toString('latin1') !== '%PDF') {
+        return c.json({ error: 'ไฟล์นี้ไม่ใช่ PDF ที่ถูกต้อง' }, 400)
+      }
+      try {
+        const parsed = await pdfParse(buffer)
+        extractedText = parsed.text
+      } catch (e: any) {
+        return c.json({ error: `อ่าน PDF ไม่สำเร็จ: ${e.message}` }, 400)
+      }
     } else {
       extractedText = buffer.toString('utf-8')
     }
