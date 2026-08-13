@@ -1,0 +1,20 @@
+model_list:
+  - model_name: router-general
+    litellm_params:
+      model: gemini/gemini-1.5-flash
+      api_key: os.environ/GEMINI_API_KEY
+
+  - model_name: router-code
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20240620
+      api_key: os.environ/ANTHROPIC_API_KEY
+
+  - model_name: router-image
+    litellm_params:
+      model: dall-e-3
+      api_key: os.environ/OPENAI_API_KEY
+
+# กำหนดการเปลี่ยนโมเดลสำรองอัตโนมัติหาก API ค่ายหลักมีปัญหา
+router_settings:
+  fallbacks:
+    - router-code: ["router-general"]
