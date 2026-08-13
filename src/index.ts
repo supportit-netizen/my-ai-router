@@ -1,10 +1,12 @@
 import 'dotenv/config'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import OpenAI from 'openai'
 
 const app = new Hono()
+ app.use('/*', cors())
 
 // เตรียม Client ของแต่ละค่าย
 const geminiAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
