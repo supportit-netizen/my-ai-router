@@ -1,0 +1,18 @@
+model_list:
+  - model_name: general-model
+    litellm_params:
+      model: openai/gpt-4o
+      api_key: "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"
+
+  - model_name: code-model
+    litellm_params:
+      model: anthropic/claude-3-5-sonnet-20240620
+      api_key: "sk-ant-YOUR_ANTHROPIC_KEY"
+
+  - model_name: document-model
+    litellm_params:
+      model: gemini/gemini-1.5-pro
+      api_key: "AIzaSy_YOUR_GEMINI_KEY"
+
+general_settings:
+  master_key: sk-1234
