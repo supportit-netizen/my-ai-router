@@ -18,32 +18,50 @@ DATABASE_URL = os.environ["DATABASE_URL"]
 JWT_SECRET = os.getenv("JWT_SECRET", os.getenv("LITELLM_MASTER_KEY", "change-this-secret"))
 JWT_ALGORITHM = "HS256"
 
+
+def normalize_model(value: str, provider: str) -> str:
+    """Accept legacy model names already stored in Railway variables."""
+    if provider == "gemini" and value.startswith("google/"):
+        return f"gemini/{value.removeprefix('google/')}"
+    if provider == "openrouter" and not value.startswith("openrouter/"):
+        return f"openrouter/{value}"
+    return value
+
+
 MODEL_LIST = [
     {
         "model_name": "general-model",
         "litellm_params": {
-            "model": os.getenv("GENERAL_MODEL", "gemini/gemini-2.5-flash"),
+            "model": normalize_model(
+                os.getenv("GENERAL_MODEL", "gemini/gemini-2.5-flash"), "gemini"
+            ),
             "api_key": os.getenv("GEMINI_API_KEY"),
         },
     },
     {
         "model_name": "code-model",
         "litellm_params": {
-            "model": os.getenv("CODE_MODEL", "openrouter/openai/gpt-4o-mini"),
+            "model": normalize_model(
+                os.getenv("CODE_MODEL", "openai/gpt-4o-mini"), "openrouter"
+            ),
             "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
         },
     },
     {
         "model_name": "document-model",
         "litellm_params": {
-            "model": os.getenv("DOCUMENT_MODEL", "openrouter/openai/gpt-4o-mini"),
+            "model": normalize_model(
+                os.getenv("DOCUMENT_MODEL", "openai/gpt-4o-mini"), "openrouter"
+            ),
             "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
         },
     },
     {
         "model_name": "image-model",
         "litellm_params": {
-            "model": os.getenv("IMAGE_MODEL", "openrouter/openai/gpt-image-1"),
+            "model": normalize_model(
+                os.getenv("IMAGE_MODEL", "openai/gpt-image-1"), "openrouter"
+            ),
             "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
         },
     },
