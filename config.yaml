@@ -1,18 +1,24 @@
 model_list:
   - model_name: general-model
     litellm_params:
-      model: openai/gpt-4o
-      api_key: "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"
+      model: gemini/gemini-2.5-flash
+      api_key: os.environ/GEMINI_API_KEY
 
   - model_name: code-model
     litellm_params:
-      model: anthropic/claude-3-5-sonnet-20240620
-      api_key: "sk-ant-YOUR_ANTHROPIC_KEY"
+      model: openrouter/openai/gpt-4o-mini
+      api_key: os.environ/OPENROUTER_API_KEY
 
   - model_name: document-model
     litellm_params:
-      model: gemini/gemini-1.5-pro
-      api_key: "AIzaSy_YOUR_GEMINI_KEY"
+      model: openrouter/openai/gpt-4o-mini
+      api_key: os.environ/OPENROUTER_API_KEY
+
+  - model_name: image-model
+    litellm_params:
+      model: openrouter/openai/gpt-image-1
+      api_key: os.environ/OPENROUTER_API_KEY
 
 general_settings:
-  master_key: sk-1234
+  master_key: os.environ/LITELLM_MASTER_KEY
+
