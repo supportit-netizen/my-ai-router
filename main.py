@@ -28,15 +28,37 @@ def normalize_model(value: str, provider: str) -> str:
     return value
 
 
+def usable_key(primary: str, fallback: str, prefix: str) -> str | None:
+    """Prefer a key that matches the provider instead of a stale legacy value."""
+    primary_value = os.getenv(primary)
+    fallback_value = os.getenv(fallback)
+    if primary_value and primary_value.startswith(prefix):
+        return primary_value
+    if fallback_value and fallback_value.startswith(prefix):
+        return fallback_value
+    return primary_value or fallback_value
+
+
+OPENROUTER_KEY = usable_key("OPENROUTER_API_KEY", "OPENAI_API_KEY", "sk-or-")
+GEMINI_KEY = os.getenv("GEMINI_API_KEY")
+GENERAL_MODEL = os.getenv("GENERAL_MODEL", "gemini/gemini-2.5-flash")
+
+if GEMINI_KEY and GEMINI_KEY.startswith("AIza"):
+    general_params = {
+        "model": normalize_model(GENERAL_MODEL, "gemini"),
+        "api_key": GEMINI_KEY,
+    }
+else:
+    general_params = {
+        "model": "openrouter/openai/gpt-4o-mini",
+        "api_key": OPENROUTER_KEY,
+    }
+
+
 MODEL_LIST = [
     {
         "model_name": "general-model",
-        "litellm_params": {
-            "model": normalize_model(
-                os.getenv("GENERAL_MODEL", "gemini/gemini-2.5-flash"), "gemini"
-            ),
-            "api_key": os.getenv("GEMINI_API_KEY"),
-        },
+        "litellm_params": general_params,
     },
     {
         "model_name": "code-model",
@@ -44,7 +66,7 @@ MODEL_LIST = [
             "model": normalize_model(
                 os.getenv("CODE_MODEL", "openai/gpt-4o-mini"), "openrouter"
             ),
-            "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
+            "api_key": OPENROUTER_KEY,
         },
     },
     {
@@ -53,7 +75,7 @@ MODEL_LIST = [
             "model": normalize_model(
                 os.getenv("DOCUMENT_MODEL", "openai/gpt-4o-mini"), "openrouter"
             ),
-            "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
+            "api_key": OPENROUTER_KEY,
         },
     },
     {
@@ -62,7 +84,7 @@ MODEL_LIST = [
             "model": normalize_model(
                 os.getenv("IMAGE_MODEL", "openai/gpt-image-1"), "openrouter"
             ),
-            "api_key": os.getenv("OPENROUTER_API_KEY", os.getenv("OPENAI_API_KEY")),
+            "api_key": OPENROUTER_KEY,
         },
     },
 ]
