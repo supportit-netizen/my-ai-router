@@ -1,7 +1,6 @@
 import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timedelta, timezone
-from io import BytesIO
 from typing import Any
 
 import asyncpg
@@ -11,7 +10,7 @@ from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from litellm import Router
 from pydantic import BaseModel, EmailStr
-from pypdf import PdfReader
+from upload_processing import MAX_TEXT_CHARS, extract_upload
 
 
 DATABASE_URL = os.environ["DATABASE_URL"]
@@ -238,16 +237,7 @@ async def chat(body: ChatRequest, _: dict[str, Any] = Depends(current_user)):
 
 @app.post("/api/upload")
 async def upload(file: UploadFile = File(...), _: dict[str, Any] = Depends(current_user)):
-    payload = await file.read()
-    if file.filename and file.filename.lower().endswith(".pdf"):
-        if not payload.startswith(b"%PDF"):
-            raise HTTPException(status_code=400, detail="ไฟล์นี้ไม่ใช่ PDF ที่ถูกต้อง")
-        try:
-            extracted = "\n".join(page.extract_text() or "" for page in PdfReader(BytesIO(payload)).pages)
-        except Exception as exc:
-            raise HTTPException(status_code=400, detail=f"อ่าน PDF ไม่สำเร็จ: {exc}") from exc
-    else:
-        extracted = payload.decode("utf-8", errors="replace")
+    extracted = await extract_upload(file)
     if not extracted.strip():
         raise HTTPException(status_code=400, detail="ไม่สามารถอ่านเนื้อหาจากไฟล์นี้ได้")
     response = await router.acompletion(
@@ -255,7 +245,7 @@ async def upload(file: UploadFile = File(...), _: dict[str, Any] = Depends(curre
         messages=[
             {
                 "role": "user",
-                "content": f"สรุปเนื้อหาไฟล์ต่อไปนี้เป็นภาษาไทย กระชับ ได้ใจความ:\n\n{extracted[:12000]}",
+                "content": f"สรุปเนื้อหาไฟล์ต่อไปนี้เป็นภาษาไทย กระชับ ได้ใจความ:\n\n{extracted[:MAX_TEXT_CHARS]}",
             }
         ],
     )
@@ -278,4 +268,3 @@ async def openai_compatible(
         raise HTTPException(status_code=400, detail="Streaming is not enabled on this compatibility route")
     response = await router.acompletion(model=body.model, messages=body.messages)
     return response.model_dump()
-
